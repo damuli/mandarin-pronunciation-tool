@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>華語送氣/不送氣音教學儀</title>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background: #fdfbf7; }
+        #waveform { background: white; border-radius: 10px; margin: 20px auto; border: 2px solid #ddd; width: 85%; height: 120px; }
+        .reference-section { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
+        .ref-box { width: 40%; background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #ccc; }
+        .ref-box img { width: 100%; height: auto; border-radius: 5px; }
+        .btn { padding: 15px 30px; font-size: 18px; cursor: pointer; border: none; border-radius: 8px; color: white; margin: 10px; }
+        #initBtn { background: #28a745; }
+        #recordBtn { background: #007bff; display: none; }
+    </style>
+</head>
+<body>
+    <h1>華語送氣/不送氣音觀察儀</h1>
+    
+    <div class="reference-section">
+        <div class="ref-box">
+            <h3>標準不送氣 (爸/大/故)</h3>
+            <img src="https://via.placeholder.com/400x150/007bff/ffffff?text=不送氣音波形參考" alt="不送氣波形">
+            <p style="font-size: 0.9em;">特徵：爆破後直接進入母音，無氣流雜訊。</p>
+        </div>
+        <div class="ref-box">
+            <h3>標準送氣音 (怕/踏/褲)</h3>
+            <img src="https://via.placeholder.com/400x150/28a745/ffffff?text=送氣音波形參考" alt="送氣波形">
+            <p style="font-size: 0.9em;">特徵：爆破後有一段明顯的氣流雜訊區。</p>
+        </div>
+    </div>
+
+    <div style="font-weight: bold; margin-bottom: 10px;">您的錄音波形：</div>
+    <div id="waveform"></div>
+    
+    <button id="initBtn" class="btn" onclick="initMic()">1. 授權麥克風</button>
+    <button id="recordBtn" class="btn" onclick="startRecord()">2. 開始錄音 (3秒)</button>
+
+    <script>
+        const ws = WaveSurfer.create({ container: '#waveform', waveColor: '#6c757d', progressColor: '#007bff', height: 120 });
+        let globalStream = null;
+
+        async function initMic() {
+            try {
+                globalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                document.getElementById('initBtn').style.display = 'none';
+                document.getElementById('recordBtn').style.display = 'inline-block';
+            } catch (err) { alert("無法存取麥克風，請檢查權限。"); }
+        }
+
+        async function startRecord() {
+            if (!globalStream) return;
+            const recorder = new MediaRecorder(globalStream);
+            let chunks = [];
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => { ws.load(URL.createObjectURL(new Blob(chunks))); };
+            recorder.start();
+            setTimeout(() => recorder.stop(), 3000);
+        }
+    </script>
+</body>
+</html>
